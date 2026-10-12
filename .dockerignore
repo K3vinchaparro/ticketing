@@ -1,0 +1,12 @@
+.git
+.gradle
+.idea
+.vscode
+**/build
+build-cache
+docs
+postman
+terraform
+*.md
+.env
+.env.*

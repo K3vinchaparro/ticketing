@@ -1,0 +1,84 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: ticketing
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  devtools:
+    add-properties: false
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  dynamodb:
+    endpoint: ${DYNAMODB_ENDPOINT:http://localhost:8000}
+    api-call-timeout: 5s
+    api-call-attempt-timeout: 2s
+  sqs:
+    endpoint: ${SQS_ENDPOINT:http://localhost:9324}
+    api-call-timeout: 30s
+    api-call-attempt-timeout: 25s
+
+adapter:
+  dynamodb:
+    events-table: ${EVENTS_TABLE:events}
+    orders-table: ${ORDERS_TABLE:orders}
+    idempotency-table: ${IDEMPOTENCY_TABLE:idempotency_keys}
+    audit-table: ${AUDIT_TABLE:ticket_audit}
+    idempotency-ttl: 24h
+    overdue-batch-size: 100
+  sqs:
+    queue-url: ${ORDERS_QUEUE_URL:http://localhost:9324/000000000000/orders-queue}
+  payment:
+    approval-rate: ${PAYMENT_APPROVAL_RATE:1.0}
+    latency: 200ms
+
+entrypoint:
+  sqs:
+    enabled: ${SQS_LISTENER_ENABLED:true}
+    queue-url: ${ORDERS_QUEUE_URL:http://localhost:9324/000000000000/orders-queue}
+    wait-time-seconds: 20
+    visibility-timeout-seconds: 30
+    max-number-of-messages: 10
+    concurrency: 10
+    processing-timeout: 20s
+
+scheduler:
+  enabled: ${SCHEDULER_ENABLED:true}
+  release-interval: PT30S
+  republish-interval: PT30S
+
+ticketing:
+  orders:
+    reservation-ttl: ${RESERVATION_TTL:10m}
+    processing-timeout: 2m
+    payment-timeout: 2m
+    max-tickets-per-order: 6
+
+api:
+  admin-api-key: ${ADMIN_API_KEY}
+  availability-poll-interval: 1s
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    requests: ${RATE_LIMIT_REQUESTS:300}
+    window: 10s
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    co.com.ticketing: INFO
